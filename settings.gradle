@@ -1,5 +1,6 @@
 include ':EventBus'
 include ':EventBusAnnotationProcessor'
+include ':eventbus-lifecycle'
 include ':EventBusTestJava'
 include ':EventBusTest'
 include ':EventBusTestSubscriberInJar'

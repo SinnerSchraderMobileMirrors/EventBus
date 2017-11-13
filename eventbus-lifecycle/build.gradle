@@ -1,0 +1,115 @@
+buildscript {
+    repositories {
+        jcenter()
+        google()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.0.0'
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+archivesBaseName = 'eventbus-lifecycle'
+group = 'org.greenrobot'
+version = '3.2.0-SNAPSHOT'
+
+repositories {
+    jcenter()
+    google()
+}
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion "27.0.1"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+}
+
+dependencies {
+    implementation project(':eventbus')
+    implementation "android.arch.lifecycle:runtime:1.0.3"
+    annotationProcessor "android.arch.lifecycle:compiler:1.0.0"
+}
+
+signing {
+    if (project.hasProperty('signing.keyId') && project.hasProperty('signing.password') &&
+            project.hasProperty('signing.secretKeyRingFile')) {
+        sign configurations.archives
+    } else {
+        println "Signing information missing/incomplete for ${project.name}"
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            if (project.hasProperty('preferedRepo')) println "preferedRepo = $preferedRepo"
+            if (project.hasProperty('preferedRepo') && preferedRepo == 'local') {
+                println "Deploying to local repo (aka install)..."
+                repository url: repositories.mavenLocal().url
+            } else if (project.hasProperty('preferedRepo') && project.hasProperty('preferedUsername')
+                    && project.hasProperty('preferedPassword')) {
+                configuration = configurations.deployerJars
+                repository(url: preferedRepo) {
+                    authentication(userName: preferedUsername, password: preferedPassword)
+                }
+            } else if (project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')) {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                repository(url: sonatypeRepositoryUrl) {
+                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                }
+            } else {
+                println "Settings sonatypeUsername/sonatypePassword missing/incomplete for ${project.name}"
+            }
+
+            pom.project {
+                name 'EventBus Lifecycle'
+                packaging 'aar'
+                description 'Architecture Components Lifecycle support for EventBus.'
+                url 'http://greenrobot.org/eventbus/'
+
+                scm {
+                    url 'https://github.com/greenrobot/EventBus'
+                    connection 'scm:git@github.com:greenrobot/EventBus.git'
+                    developerConnection 'scm:git@github.com:greenrobot/EventBus.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'greenrobot'
+                        name 'greenrobot'
+                    }
+                }
+
+                issueManagement {
+                    system 'GitHub Issues'
+                    url 'https://github.com/greenrobot/EventBus/issues'
+                }
+
+                organization {
+                    name 'greenrobot'
+                    url 'http://greenrobot.org'
+                }
+            }
+        }
+    }
+}
